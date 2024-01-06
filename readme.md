@@ -71,5 +71,8 @@ This project is licensed under the [MIT License](LICENSE.md).
 
 ## Acknowledgments
 
-Give credit to the libraries, tools, or individuals that helped or inspired your project.
-
+- Give credit to the libraries, tools, or individuals that helped or inspired your project.
+- Gratitude to [Dr. Ali Haghighat](#) for valuable insights and guidance throughout the development.
+- Special thanks to [Mr. Ghobad Emadi](#) for the original idea and inspiration behind this project.
+- Thanks to [Mr. Mohammad Ali Mirzaei](#) for his support and contributions to the project.
+- Shoutout to [Mr. Alireza Rahati](#) for his assistance and collaboration.
