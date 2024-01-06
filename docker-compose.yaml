@@ -1,0 +1,88 @@
+version: '2.2'
+
+services:
+  account:
+    build: target
+    image: "account:${DOCKER_TAG:-latest}"
+    ports:
+      - '8989:8989'
+      - '5005:5005'
+    environment:
+      JAVA_OPTIONS: >-
+        -Xmx1024m
+        -Xdebug
+        -Dspring.profiles.active=dev
+      JAVA_TOOL_OPTIONS:
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    depends_on:
+      - acc-postgresdb
+      - mop-keycloak
+      - acc-mock-server
+
+  acc-flyway:
+    image: flyway/flyway
+    command: -url=jdbc:postgresql://acc-postgresdb/account -schemas=public -user=account -password=account -connectRetries=60 migrate
+    volumes:
+      - ${PWD}/src/main/resources/db/migration:/flyway/sql
+    depends_on:
+      - acc-postgresdb
+
+  acc-postgresdb:
+    image: postgres:13.3-alpine
+    ports:
+      - '5434:5432'
+    environment:
+      POSTGRES_USER: account
+      POSTGRES_PASSWORD: account
+      POSTGRES_DB: account
+
+  acc-mock-server:
+    image: mockserver/mockserver:5.14.0
+    command: -logLevel DEBUG -serverPort 1080
+    ports:
+      - '1080:1080'
+    environment:
+      MOCKSERVER_PROPERTY_FILE: /config/mockserver.properties
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/initializer_expectations.json
+    volumes:
+      - ./component-test/features/expectations/:/config/
+
+  mop-keycloak:
+    image: quay.io/keycloak/keycloak:18.0.1-legacy
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+
+      JAVA_OPTS: -server -Xms64m -Xmx512m -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=256m  -Djava.net.preferIPv4Stack=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true  -Dkeycloak.profile.feature.admin_fine_grained_authz=enabled -Dkeycloak.profile.feature.token_exchange=enabled
+
+      DB_ADDR: mop-keycloak-db
+
+      DB_USER: keycloak
+      DB_PASSWORD: keycloak
+      DB_VENDOR: postgres
+      DB_DATABASE: keycloak
+      DB_PORT: "5432"
+      KEYCLOAK_IMPORT: /tmp/import-realm.json
+    ports:
+      - '8080:8080'
+    depends_on:
+      - mop-keycloak-db
+    volumes:
+      - ./docker/keycloak:/tmp
+      - ./docker/keycloak/themes/acc:/opt/jboss/keycloak/themes/acc
+
+  mop-keycloak-db:
+    image: postgres:13.3-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: keycloak
+
+  mop-web-keycloak:
+    image: "httpd:latest"
+    ports:
+      - '9090:80'
+    volumes:
+      - ./docker/keycloak/acc-complete-registration-web-panel/src:/usr/local/apache2/htdocs
