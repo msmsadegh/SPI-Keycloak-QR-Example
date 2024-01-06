@@ -85,6 +85,16 @@
             <artifactId>spring-security-web</artifactId>
             <version>5.6.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-admin-client</artifactId>
+            <version>18.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-client</artifactId>
+            <version>3.15.1.Final</version>
+        </dependency>
     </dependencies>
 
 </project>
